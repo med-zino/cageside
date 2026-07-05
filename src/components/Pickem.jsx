@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react'
 import { Reveal } from './ui'
 import { headshot } from '../api'
 import { useCountdown } from '../hooks'
-import { DISCORD_INVITE, FORM_ENDPOINT, WEB3FORMS_KEY, PICKEM_PRIZE } from '../config'
+import { DISCORD_INVITE, FORM_ENDPOINT, WEB3FORMS_KEY, PICKEM_PRIZE, SITE_URL } from '../config'
 
 const pad = (n) => String(n).padStart(2, '0')
 
@@ -36,6 +36,7 @@ export default function Pickem({ events = [] }) {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [formError, setFormError] = useState('')
+  const [challengeCopied, setChallengeCopied] = useState(false)
 
   // main event first, then the rest of the card in listed order
   const bouts = useMemo(() => {
@@ -111,6 +112,23 @@ export default function Pickem({ events = [] }) {
       setPhase('form')
       setFormError('SOMETHING BROKE — TRY AGAIN')
     }
+  }
+
+  const challengeFriend = async () => {
+    const text = `🥊 I just locked in my ${event.shortName} picks on CAGESIDE. Think you can out-pick me? Top score wins a ${PICKEM_PRIZE} → ${SITE_URL}/#/pickem`
+    if (navigator.share) {
+      try {
+        await navigator.share({ text })
+        return
+      } catch (err) {
+        if (err.name === 'AbortError') return
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(text)
+      setChallengeCopied(true)
+      setTimeout(() => setChallengeCopied(false), 2500)
+    } catch {}
   }
 
   if (!event) {
@@ -286,8 +304,16 @@ export default function Pickem({ events = [] }) {
                 after the fights. Your picks were also copied — paste them in{' '}
                 <strong>#pickem</strong> and defend them:
               </p>
+              <button
+                type="button"
+                className="btn btn-gold pk-modal-btn"
+                onClick={challengeFriend}
+                data-cursor
+              >
+                {challengeCopied ? '✔ COPIED — NOW SEND IT' : '⚔ CHALLENGE A FRIEND'}
+              </button>
               <a
-                className="btn btn-red pk-modal-btn"
+                className="btn btn-red pk-modal-btn pk-modal-btn-secondary"
                 href={DISCORD_INVITE || '#'}
                 target={DISCORD_INVITE ? '_blank' : undefined}
                 rel="noreferrer"

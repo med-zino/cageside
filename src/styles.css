@@ -302,6 +302,9 @@ ul, ol { list-style: none; }
 .btn-red { background: var(--red); border-color: var(--red); color: #fff; }
 .btn-red::before { background: #0a0a0c; }
 .btn-ghost { background: transparent; }
+.btn-gold { background: var(--gold); border-color: var(--gold); color: #0a0a0c; }
+.btn-gold::before { background: #0a0a0c; }
+.btn-gold:hover { color: var(--gold); border-color: var(--gold); }
 .btn-pickem {
   display: flex; flex-direction: column; align-items: center; gap: 7px;
   background: var(--red); border: 1px solid var(--red); color: #fff;
@@ -1027,7 +1030,8 @@ ul, ol { list-style: none; }
   letter-spacing: 0.14em; color: var(--red);
   margin-top: 12px;
 }
-.pk-modal-btn { margin-top: 24px; width: 100%; text-align: center; }
+.pk-modal-btn { margin-top: 24px; width: 100%; text-align: center; display: block; }
+.pk-modal-btn-secondary { margin-top: 12px; }
 .pk-modal-cancel {
   font-family: var(--mono); font-size: 0.6rem;
   letter-spacing: 0.24em; color: var(--muted);
