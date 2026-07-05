@@ -957,6 +957,73 @@ ul, ol { list-style: none; }
   letter-spacing: 0.16em; color: #4ade80;
 }
 .pk-copied strong { color: var(--text); }
+.pk-modal-overlay {
+  position: fixed; inset: 0; z-index: 300;
+  background: rgba(5, 5, 7, 0.82);
+  backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.pk-modal {
+  width: min(460px, 100%);
+  background: var(--panel);
+  border: 1px solid rgba(232, 17, 45, 0.5);
+  box-shadow: 0 40px 120px -40px var(--red-glow);
+  padding: 38px 34px;
+  display: flex; flex-direction: column;
+}
+.pk-modal-title {
+  font-family: var(--display);
+  font-size: clamp(1.6rem, 4vw, 2.2rem);
+  letter-spacing: 0.02em;
+}
+.pk-modal-sub {
+  font-family: var(--mono); font-size: 0.6rem;
+  letter-spacing: 0.22em; color: var(--muted);
+  margin: 10px 0 26px;
+}
+.pk-modal-label {
+  font-family: var(--mono); font-size: 0.58rem;
+  letter-spacing: 0.24em; color: var(--muted);
+  margin: 14px 0 8px;
+}
+.pk-modal input {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  color: var(--text);
+  font-family: var(--mono); font-size: 0.82rem;
+  padding: 14px 16px;
+  outline: none;
+  transition: border-color 0.3s;
+}
+.pk-modal input:focus { border-color: var(--red); }
+.pk-modal input::placeholder { color: #55535e; }
+.pk-modal-error {
+  font-family: var(--mono); font-size: 0.6rem;
+  letter-spacing: 0.14em; color: var(--red);
+  margin-top: 12px;
+}
+.pk-modal-btn { margin-top: 24px; width: 100%; text-align: center; }
+.pk-modal-cancel {
+  font-family: var(--mono); font-size: 0.6rem;
+  letter-spacing: 0.24em; color: var(--muted);
+  margin-top: 16px;
+  padding: 8px;
+  transition: color 0.25s;
+}
+.pk-modal-cancel:hover { color: var(--text); }
+.pk-done-big {
+  font-family: var(--display);
+  font-size: clamp(1.8rem, 4.5vw, 2.6rem);
+  text-align: center;
+}
+.pk-done-text {
+  color: var(--muted); font-size: 0.88rem; line-height: 1.65;
+  text-align: center;
+  margin: 18px 0 10px;
+}
+.pk-done-text strong { color: var(--text); }
+.pk-modal-done { align-items: center; }
 .btn:disabled { opacity: 0.35; pointer-events: none; }
 
 /* ============ footer ============ */

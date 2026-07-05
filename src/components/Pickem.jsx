@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
-import { motion } from 'motion/react'
+import { motion, AnimatePresence } from 'motion/react'
 import { Reveal } from './ui'
 import { headshot } from '../api'
 import { useCountdown } from '../hooks'
-import { DISCORD_INVITE, PICKEM_PRIZE } from '../config'
+import { DISCORD_INVITE, FORM_ENDPOINT, WEB3FORMS_KEY, PICKEM_PRIZE } from '../config'
 
 const pad = (n) => String(n).padStart(2, '0')
 
@@ -31,7 +31,11 @@ export default function Pickem({ events = [] }) {
   const cd = useCountdown(event?.date)
   const storageKey = event ? `cageside-picks-${event.id}` : null
   const [picks, setPicks] = useState({})
-  const [copied, setCopied] = useState(false)
+  // idle → form (name/email modal) → sending → done
+  const [phase, setPhase] = useState('idle')
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [formError, setFormError] = useState('')
 
   // main event first, then the rest of the card in listed order
   const bouts = useMemo(() => {
@@ -44,6 +48,11 @@ export default function Pickem({ events = [] }) {
     if (!storageKey) return
     try {
       setPicks(JSON.parse(localStorage.getItem(storageKey)) || {})
+      const entry = JSON.parse(localStorage.getItem(`cageside-entry-${event.id}`))
+      if (entry) {
+        setName(entry.name || '')
+        setEmail(entry.email || '')
+      }
     } catch {
       setPicks({})
     }
@@ -53,12 +62,12 @@ export default function Pickem({ events = [] }) {
     const next = { ...picks, [boutId]: picks[boutId] === fighterId ? undefined : fighterId }
     setPicks(next)
     if (storageKey) localStorage.setItem(storageKey, JSON.stringify(next))
-    setCopied(false)
+    if (phase === 'done') setPhase('idle')
   }
 
   const pickedCount = bouts.filter((b) => picks[b.id]).length
 
-  const submit = async () => {
+  const picksText = () => {
     const lines = bouts
       .filter((b) => picks[b.id])
       .map((b) => {
@@ -66,14 +75,42 @@ export default function Pickem({ events = [] }) {
         const l = b.fighters.find((f) => f.id !== picks[b.id])
         return `${w.name} over ${l.name}`
       })
-    const text = `🥊 CAGESIDE PICK'EM — ${event.shortName}\n${lines.join('\n')}\n(${pickedCount}/${bouts.length} picks)`
+    return `🥊 CAGESIDE PICK'EM — ${event.shortName} — ${name.trim()}\n${lines.join('\n')}\n(${pickedCount}/${bouts.length} picks)`
+  }
+
+  const submitEntry = async (e) => {
+    e.preventDefault()
+    if (!name.trim()) return setFormError('DROP A NICKNAME FOR THE LEADERBOARD')
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return setFormError("THAT EMAIL DIDN'T LAND")
+    setFormError('')
+    setPhase('sending')
+    const text = picksText()
     try {
-      await navigator.clipboard.writeText(text)
-      setCopied(true)
+      if (FORM_ENDPOINT && WEB3FORMS_KEY) {
+        const res = await fetch(FORM_ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify({
+            access_key: WEB3FORMS_KEY,
+            subject: `Pick'em entry — ${name.trim()} (${pickedCount}/${bouts.length}) — ${event.shortName}`,
+            from_name: 'CAGESIDE PICKEM',
+            name: name.trim(),
+            email,
+            picks: text,
+          }),
+        })
+        const data = await res.json()
+        if (!data.success) throw new Error('entry rejected')
+      }
+      localStorage.setItem(`cageside-entry-${event.id}`, JSON.stringify({ name: name.trim(), email, at: new Date().toISOString() }))
+      try {
+        await navigator.clipboard.writeText(text)
+      } catch {}
+      setPhase('done')
     } catch {
-      setCopied(true)
+      setPhase('form')
+      setFormError('SOMETHING BROKE — TRY AGAIN')
     }
-    if (DISCORD_INVITE) window.open(DISCORD_INVITE, '_blank', 'noopener')
   }
 
   if (!event) {
@@ -153,17 +190,117 @@ export default function Pickem({ events = [] }) {
             />
           </div>
         </div>
-        {copied ? (
-          <div className="pk-copied">
-            ✔ PICKS COPIED — PASTE THEM IN <strong>#PICKEM</strong> ON THE DISCORD
-            {!DISCORD_INVITE && ' (invite link coming soon)'}
-          </div>
+        {phase === 'done' ? (
+          <div className="pk-copied">✔ ENTRY LOCKED IN, {name.trim().toUpperCase()}</div>
         ) : (
-          <button className="btn btn-red" onClick={submit} disabled={pickedCount === 0}>
-            SUBMIT PICKS → DISCORD
+          <button
+            className="btn btn-red"
+            onClick={() => setPhase('form')}
+            disabled={pickedCount === 0}
+          >
+            SUBMIT MY PICKS →
           </button>
         )}
       </motion.div>
+
+      <AnimatePresence>
+        {(phase === 'form' || phase === 'sending') && (
+          <motion.div
+            className="pk-modal-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => phase === 'form' && setPhase('idle')}
+          >
+            <motion.form
+              className="pk-modal"
+              initial={{ y: 40, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 30, opacity: 0 }}
+              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              onClick={(e) => e.stopPropagation()}
+              onSubmit={submitEntry}
+            >
+              <div className="pk-modal-title">LOCK IN YOUR ENTRY</div>
+              <div className="pk-modal-sub">
+                {pickedCount}/{bouts.length} PICKS · {event.shortName} · PRIZE: {PICKEM_PRIZE}
+              </div>
+              <label className="pk-modal-label" htmlFor="pk-name">
+                NICKNAME (SHOWN ON THE LEADERBOARD)
+              </label>
+              <input
+                id="pk-name"
+                type="text"
+                maxLength={30}
+                placeholder="IronMike99"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                data-cursor
+              />
+              <label className="pk-modal-label" htmlFor="pk-email">
+                EMAIL (RESULTS + PRIZE CONTACT — NO SPAM)
+              </label>
+              <input
+                id="pk-email"
+                type="email"
+                placeholder="you@fightfan.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                data-cursor
+              />
+              {formError && <div className="pk-modal-error">{formError}</div>}
+              <button className="btn btn-red pk-modal-btn" type="submit" disabled={phase === 'sending'}>
+                {phase === 'sending' ? 'LOCKING IN…' : 'LOCK IN MY PICKS 🔒'}
+              </button>
+              <button
+                type="button"
+                className="pk-modal-cancel"
+                onClick={() => setPhase('idle')}
+                disabled={phase === 'sending'}
+              >
+                KEEP EDITING
+              </button>
+            </motion.form>
+          </motion.div>
+        )}
+
+        {phase === 'done' && (
+          <motion.div
+            className="pk-modal-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setPhase('idle')}
+          >
+            <motion.div
+              className="pk-modal pk-modal-done"
+              initial={{ y: 40, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 30, opacity: 0 }}
+              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="pk-done-big">🥊 ENTRY LOCKED IN!</div>
+              <p className="pk-done-text">
+                You're on the card, <strong>{name.trim()}</strong>. Results land in your inbox
+                after the fights. Your picks were also copied — paste them in{' '}
+                <strong>#pickem</strong> and defend them:
+              </p>
+              <a
+                className="btn btn-red pk-modal-btn"
+                href={DISCORD_INVITE || '#'}
+                target={DISCORD_INVITE ? '_blank' : undefined}
+                rel="noreferrer"
+              >
+                JOIN THE TRASH TALK → DISCORD
+              </a>
+              <button type="button" className="pk-modal-cancel" onClick={() => setPhase('idle')}>
+                BACK TO THE CARD
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
