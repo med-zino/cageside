@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import { motion, useScroll, useSpring } from 'motion/react'
+import { DISCORD_INVITE } from '../config'
 
 const LINKS = [
   ['EVENTS', '#events'],
   ['RANKINGS', '#rankings'],
   ['NEWS', '#news'],
-  ['PRO', '#pro'],
+  ['JOIN', '#join'],
 ]
 
 export default function Nav() {
@@ -21,6 +22,15 @@ export default function Nav() {
 
   const go = (e, hash) => {
     e.preventDefault()
+    // section links only exist on the home page — leave #/pickem first
+    if (window.location.hash.startsWith('#/')) {
+      window.location.hash = ''
+      setTimeout(() => {
+        if (window.__lenis) window.__lenis.scrollTo(hash, { offset: -70, duration: 1.2 })
+        else document.querySelector(hash)?.scrollIntoView({ behavior: 'smooth' })
+      }, 60)
+      return
+    }
     if (window.__lenis) window.__lenis.scrollTo(hash, { offset: -70, duration: 1.4 })
     else document.querySelector(hash)?.scrollIntoView({ behavior: 'smooth' })
   }
@@ -41,11 +51,20 @@ export default function Nav() {
             {label}
           </a>
         ))}
+        <a className="nav-pickem" href="#/pickem">
+          PICK'EM
+        </a>
       </nav>
-      <div className="nav-live">
+      <a
+        className="nav-discord"
+        href={DISCORD_INVITE || '#join'}
+        onClick={DISCORD_INVITE ? undefined : (e) => go(e, '#join')}
+        target={DISCORD_INVITE ? '_blank' : undefined}
+        rel="noreferrer"
+      >
         <span className="pulse" />
-        LIVE DATA
-      </div>
+        DISCORD
+      </a>
       <motion.div className="scroll-progress" style={{ scaleX }} />
     </motion.header>
   )

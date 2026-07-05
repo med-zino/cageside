@@ -10,12 +10,15 @@ import Events from './components/Events'
 import Rankings from './components/Rankings'
 import Spotlight from './components/Spotlight'
 import News from './components/News'
+import Join from './components/Join'
 import Pro from './components/Pro'
 import Footer from './components/Footer'
+import Pickem from './components/Pickem'
 import { fetchEvents, fetchNews, fetchRankings, fetchFighters } from './api'
 
 export default function App() {
   const [loading, setLoading] = useState(true)
+  const [route, setRoute] = useState(window.location.hash)
   const [events, setEvents] = useState([])
   const [news, setNews] = useState([])
   const [rankings, setRankings] = useState([])
@@ -55,21 +58,44 @@ export default function App() {
     return () => clearTimeout(t)
   }, [])
 
+  // hash routing: #/pickem is its own page, everything else is home
+  useEffect(() => {
+    const onHash = () => {
+      setRoute(window.location.hash)
+      if (window.location.hash.startsWith('#/')) {
+        window.__lenis
+          ? window.__lenis.scrollTo(0, { immediate: true })
+          : window.scrollTo(0, 0)
+      }
+    }
+    addEventListener('hashchange', onHash)
+    return () => removeEventListener('hashchange', onHash)
+  }, [])
+
+  const onPickem = route.startsWith('#/pickem')
+
   return (
     <>
       <AnimatePresence>{loading && <Preloader key="pre" />}</AnimatePresence>
       <Cursor />
       <div className="noise" />
       <Nav />
-      <main>
-        <Hero event={events[0]} fightersMap={fighters} />
-        <Ticker events={events} />
-        <Events events={events} />
-        <Rankings rankings={rankings} fightersMap={fighters} />
-        <Spotlight rankings={rankings} fightersMap={fighters} />
-        <News news={news} />
-        <Pro />
-      </main>
+      {onPickem ? (
+        <main>
+          <Pickem events={events} />
+        </main>
+      ) : (
+        <main>
+          <Hero event={events[0]} fightersMap={fighters} />
+          <Ticker events={events} />
+          <Events events={events} />
+          <Rankings rankings={rankings} fightersMap={fighters} />
+          <Spotlight rankings={rankings} fightersMap={fighters} />
+          <News news={news} />
+          <Join />
+          <Pro />
+        </main>
+      )}
       <Footer />
     </>
   )

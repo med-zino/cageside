@@ -70,10 +70,9 @@ export default function Hero({ event, fightersMap = {} }) {
     window.__lenis
       ? window.__lenis.scrollTo('#events', { offset: -70, duration: 1.4 })
       : document.querySelector('#events')?.scrollIntoView({ behavior: 'smooth' })
-  const goPro = () =>
-    window.__lenis
-      ? window.__lenis.scrollTo('#pro', { duration: 1.6 })
-      : document.querySelector('#pro')?.scrollIntoView({ behavior: 'smooth' })
+  const goPickem = () => {
+    window.location.hash = '#/pickem'
+  }
 
   return (
     <section className="hero" id="top">
@@ -161,8 +160,8 @@ export default function Hero({ event, fightersMap = {} }) {
           <button className="btn btn-red" onClick={goEvents}>
             FULL FIGHT CARD →
           </button>
-          <button className="btn btn-ghost" onClick={goPro}>
-            GET PRO PICKS
+          <button className="btn btn-ghost" onClick={goPickem}>
+            🎯 PLAY PICK'EM — WIN PRIZES
           </button>
         </motion.div>
       </motion.div>

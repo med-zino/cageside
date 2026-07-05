@@ -6,7 +6,7 @@ const TIERS = [
     price: 'FREE',
     tag: null,
     perks: ['Fight cards & countdowns', 'Live rankings', 'News feed', 'Weekly newsletter'],
-    cta: 'YOU ARE HERE',
+    cta: 'JOIN FREE ↑',
   },
   {
     name: 'INSIDER',
@@ -14,7 +14,7 @@ const TIERS = [
     per: '/mo',
     tag: null,
     perks: ['Everything in Fan', 'Zero ads', 'Pick’em leagues & prizes', 'Fight-week email breakdowns'],
-    cta: 'COMING SOON',
+    cta: 'JOIN THE WAITLIST ↑',
   },
   {
     name: 'PRO',
@@ -27,10 +27,15 @@ const TIERS = [
       'Live judge scorecards',
       'Private Discord war room',
     ],
-    cta: 'COMING SOON',
+    cta: 'JOIN THE WAITLIST ↑',
     featured: true,
   },
 ]
+
+const goJoin = () =>
+  window.__lenis
+    ? window.__lenis.scrollTo('#join', { offset: -70, duration: 1.2 })
+    : document.querySelector('#join')?.scrollIntoView({ behavior: 'smooth' })
 
 export default function Pro() {
   return (
@@ -53,7 +58,10 @@ export default function Pro() {
                   </li>
                 ))}
               </ul>
-              <button className={`btn ${t.featured ? 'btn-red' : 'btn-ghost'} pro-btn`}>
+              <button
+                className={`btn ${t.featured ? 'btn-red' : 'btn-ghost'} pro-btn`}
+                onClick={goJoin}
+              >
                 {t.cta}
               </button>
             </Tilt>
