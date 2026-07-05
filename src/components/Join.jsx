@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Reveal, SectionHead } from './ui'
-import { DISCORD_INVITE, FORM_ENDPOINT, PICKEM_PRIZE } from '../config'
+import { DISCORD_INVITE, FORM_ENDPOINT, WEB3FORMS_KEY, PICKEM_PRIZE } from '../config'
 
 const PERKS = [
   ['📋', 'FIGHT WEEK BRIEF', 'Card breakdown + one stat nobody noticed, every Tuesday'],
@@ -18,13 +18,20 @@ export default function Join() {
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return setState('error')
     setState('sending')
     try {
-      if (FORM_ENDPOINT) {
+      if (FORM_ENDPOINT && WEB3FORMS_KEY) {
         const res = await fetch(FORM_ENDPOINT, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-          body: JSON.stringify({ email, source: 'cageside-fight-week' }),
+          body: JSON.stringify({
+            access_key: WEB3FORMS_KEY,
+            subject: 'New CAGESIDE fight-week subscriber',
+            from_name: 'CAGESIDE',
+            email,
+            source: 'cageside-fight-week',
+          }),
         })
-        if (!res.ok) throw new Error('form endpoint rejected')
+        const data = await res.json()
+        if (!data.success) throw new Error('form endpoint rejected')
       } else {
         const list = JSON.parse(localStorage.getItem('cageside-emails') || '[]')
         list.push({ email, at: new Date().toISOString() })
