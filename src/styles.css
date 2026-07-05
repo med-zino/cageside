@@ -198,7 +198,7 @@ ul, ol { list-style: none; }
   opacity: 0.5;
 }
 .hero-fighter {
-  position: absolute; bottom: -4%;
+  position: absolute; bottom: 7%;
   height: 82vh; max-height: 780px;
   object-fit: contain; object-position: bottom;
   filter: grayscale(0.75) contrast(1.08) drop-shadow(0 0 60px rgba(232, 17, 45, 0.25));
