@@ -1,6 +1,7 @@
 import { motion, useScroll, useTransform } from 'motion/react'
 import { useCountdown } from '../hooks'
 import { slugify, headshot } from '../api'
+import { PICKEM_PRIZE } from '../config'
 
 const EASE = [0.16, 1, 0.3, 1]
 const pad = (n) => String(n).padStart(2, '0')
@@ -157,11 +158,12 @@ export default function Hero({ event, fightersMap = {} }) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 2.95, duration: 0.8, ease: EASE }}
         >
-          <button className="btn btn-red" onClick={goEvents}>
-            FULL FIGHT CARD →
+          <button className="btn btn-pickem" onClick={goPickem}>
+            <span className="btn-pickem-top">🎯 PLAY PICK'EM</span>
+            <span className="btn-pickem-sub">CALL THE CARD — WIN A {PICKEM_PRIZE}</span>
           </button>
-          <button className="btn btn-ghost" onClick={goPickem}>
-            🎯 PLAY PICK'EM — WIN PRIZES
+          <button className="btn btn-ghost" onClick={goEvents}>
+            FULL FIGHT CARD →
           </button>
         </motion.div>
       </motion.div>
